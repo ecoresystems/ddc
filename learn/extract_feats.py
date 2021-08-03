@@ -1,7 +1,15 @@
-import essentia
-from essentia.standard import MonoLoader, FrameGenerator, Windowing, Spectrum, MelBands
+import multiprocessing
+from multiprocessing import Process
+
 import numpy as np
-from tqdm import tqdm
+from essentia.standard import MonoLoader, FrameGenerator, Windowing, Spectrum, MelBands
+import argparse
+import json
+import os
+try:
+    import cPickle as pickle
+except:
+    import pickle
 
 def create_analyzers(fs=44100.0,
                      nhop=512,
@@ -20,6 +28,7 @@ def create_analyzers(fs=44100.0,
                        sampleRate=fs)
         analyzers.append((window, spectrum, mel))
     return analyzers
+
 
 def extract_mel_feats(audio_fp, analyzers, fs=44100.0, nhop=512, nffts=[1024, 2048, 4096], log_scale=True):
     # Extract features
@@ -43,17 +52,28 @@ def extract_mel_feats(audio_fp, analyzers, fs=44100.0, nhop=512, nffts=[1024, 20
 
     return feat_channels
 
-if __name__ == '__main__':
-    import argparse
-    try:
-        import cPickle as pickle
-    except:
-        import pickle
-    import json
-    import os
 
+def extract_feature(song_name: str, json_fp,nffts,args):
+    print('Extracting feats from {}'.format(song_name))
+    with open(json_fp, 'r') as json_f:
+        meta = json.loads(json_f.read())
+    song_metadata = {k: meta[k] for k in ['title', 'artist']}
+    # Create anlyzers
+    analyzers = create_analyzers(fs=44100.0, nhop=args.nhop, nffts=nffts, mel_nband=args.mel_nband)
+    music_fp = meta['music_fp']
+    if not os.path.exists(music_fp):
+        raise ValueError('No music for {}'.format(json_fp))
+
+    song_feats = extract_mel_feats(music_fp, analyzers, fs=44100.0, nhop=args.nhop, nffts=nffts,
+                                   log_scale=args.log_scale)
+
+    feats_fp = os.path.join(args.out_dir, '{}.pkl'.format(song_name))
+    with open(feats_fp, 'wb') as f:
+        pickle.dump(song_feats, f)
+
+
+def main():
     parser = argparse.ArgumentParser()
-
     parser.add_argument('dataset_fps', type=str, nargs='+', help='')
     parser.add_argument('--out_dir', type=str, required=True, help='')
     parser.add_argument('--nhop', type=int, help='')
@@ -73,9 +93,6 @@ if __name__ == '__main__':
 
     nffts = [int(x) for x in args.nffts.split(',')]
 
-    # Create anlyzers
-    analyzers = create_analyzers(fs=44100.0, nhop=args.nhop, nffts=nffts, mel_nband=args.mel_nband)
-
     # Create outdir
     if not os.path.isdir(args.out_dir):
         os.makedirs(args.out_dir)
@@ -85,20 +102,37 @@ if __name__ == '__main__':
         with open(dataset_fp, 'r') as f:
             json_fps = f.read().splitlines()
 
+        cpu_count = multiprocessing.cpu_count()
+        print("Running Parallel Task With Parallel Process: " + str(cpu_count))
+        tasks_list = []
         for json_fp in json_fps:
             song_name = os.path.splitext(os.path.split(json_fp)[1])[0]
-            print('Extracting feats from {}'.format(song_name))
+            tasks_list.append((song_name,json_fp,nffts,args))
+        tasks = len(tasks_list)
+        batch_count = tasks // cpu_count + 1
+        # Run parallel process in batch
+        for batch_index in range(batch_count):
+            process_list = []
+            print('Processing Batch %d, total: %d, CPUs: %d' % (batch_index, batch_count, cpu_count))
+            if batch_index < batch_count - 1:
+                process_num = cpu_count
+            else:
+                process_num = tasks % cpu_count
+            for process_index in range(process_num):
+                task_info = tasks_list[batch_index * cpu_count + process_index]
+                p = Process(target=extract_feature,
+                            args=(
+                                task_info[0], task_info[1], task_info[2],
+                                task_info[3],))
+                process_list.append(p)
+                p.start()
+            print("All batch process load complete")
+            print("Waiting process sync")
+            for p in process_list:
+                p.join()
+                p.close()
+            print("Process synced")
 
-            with open(json_fp, 'r') as json_f:
-                meta = json.loads(json_f.read())
-            song_metadata = {k: meta[k] for k in ['title', 'artist']}
 
-            music_fp = meta['music_fp']
-            if not os.path.exists(music_fp):
-                raise ValueError('No music for {}'.format(json_fp))
-
-            song_feats = extract_mel_feats(music_fp, analyzers, fs=44100.0, nhop=args.nhop, nffts=nffts, log_scale=args.log_scale)
-
-            feats_fp = os.path.join(args.out_dir, '{}.pkl'.format(song_name))
-            with open(feats_fp, 'wb') as f:
-                pickle.dump(song_feats, f)
+if __name__ == '__main__':
+    main()
