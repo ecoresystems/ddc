@@ -45,7 +45,10 @@ def extract_mel_feats(audio_fp, analyzers, fs=44100.0, nhop=512, nffts=[1024, 20
 
 if __name__ == '__main__':
     import argparse
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
     import json
     import os
 
