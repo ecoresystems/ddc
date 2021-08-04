@@ -1,2 +1,2 @@
-SM_DIR=~/Desktop/Projects/ddc
+SM_DIR=~/Projects/ddc
 SMDATA_DIR=${SM_DIR}/data
