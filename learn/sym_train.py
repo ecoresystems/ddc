@@ -1,5 +1,8 @@
 from collections import defaultdict
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import os
 import time
 
@@ -110,7 +113,7 @@ def main(_):
             print('Calculating validation metrics')
             mean_per_band, std_per_band = calc_mean_std_per_band(valid_data)
             with open(z_score_fp, 'wb') as f:
-                pickle.dump((mean_per_band, std_per_band), f)
+                pickle.dump((mean_per_band, std_per_band), f, protocol=2)
         else:
             print('Loading validation metrics')
             with open(z_score_fp, 'rb') as f:
@@ -518,7 +521,7 @@ def main(_):
                 step_time_prev = step_time
 
             with open(os.path.join(FLAGS.experiment_dir, 'seq.pkl'), 'wb') as f:
-                pickle.dump((seq_scores, seq_sym_idxs, seq_syms), f)
+                pickle.dump((seq_scores, seq_sym_idxs, seq_syms), f, protocol=2)
 
 if __name__ == '__main__':
     tf.app.run()

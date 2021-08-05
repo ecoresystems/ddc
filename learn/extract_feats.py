@@ -53,7 +53,7 @@ if __name__ == '__main__':
     try:
         import cPickle as pickle
     except:
-        import _pickle
+        import pickle
     import json
     import os
 
@@ -107,5 +107,5 @@ if __name__ == '__main__':
 
             feats_fp = os.path.join(args.out_dir, '{}.pkl'.format(song_name))
             with open(feats_fp, 'wb') as f:
-                pickle.dump(song_feats, f)
+                pickle.dump(song_feats, f, protocol=2)
     #print(f"Single process takes {start_time - time.time()}s")

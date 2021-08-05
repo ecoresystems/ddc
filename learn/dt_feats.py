@@ -2,7 +2,10 @@ import numpy as np
 
 if __name__ == '__main__':
     import argparse
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
     import glob
     import os
 
@@ -39,4 +42,4 @@ if __name__ == '__main__':
 
         feat_out_fp = os.path.join(args.out_dir, '{}.pkl'.format(song_name))
         with open(feat_out_fp, 'wb') as f:
-            pickle.dump(song_feats_dt, f)
+            pickle.dump(song_feats_dt, f, protocol=2)

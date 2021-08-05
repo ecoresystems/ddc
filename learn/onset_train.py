@@ -1,5 +1,8 @@
 from collections import defaultdict
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import os
 import time
 
@@ -98,7 +101,7 @@ def main(_):
             print('Calculating validation metrics')
             mean_per_band, std_per_band = calc_mean_std_per_band(valid_data)
             with open(z_score_fp, 'wb') as f:
-                pickle.dump((mean_per_band, std_per_band), f)
+                pickle.dump((mean_per_band, std_per_band), f, protocol=2)
         else:
             print('Loading validation metrics')
             with open(z_score_fp, 'rb') as f:
@@ -386,7 +389,7 @@ def main(_):
                     print('{} ({})->{} ({})'.format(chart.get_song_metadata(), chart.song_features.shape, out_name, song_feats_export.shape))
 
                     with open(os.path.join(export_dir, '{}.pkl'.format(out_name)), 'wb') as f:
-                        pickle.dump(song_feats_export, f)
+                        pickle.dump(song_feats_export, f, protocol=2)
 
                     songs_complete.add(song_features_id)
 
@@ -475,7 +478,7 @@ def main(_):
                     }
                     with open(chart_export_fp, 'wb') as f:
                         print('Saving {} {}'.format(chart.get_song_metadata(), chart.get_foot_difficulty()))
-                        pickle.dump(chart_eval_save, f)
+                        pickle.dump(chart_eval_save, f, protocol=2)
 
                 if len(charts_valid) > 0:
                     threshold_names = ['diff_perchart', 'all_perchart', 'diff_micro', 'all_micro']
@@ -493,7 +496,7 @@ def main(_):
 
             # dump PRC for inspection
             with open(os.path.join(FLAGS.experiment_dir, 'prc.pkl'), 'wb') as f:
-                pickle.dump(prc, f)
+                pickle.dump(prc, f, protocol=2)
 
             # calculate perchart metrics
             metrics_perchart = {k: (np.mean(v), np.std(v), np.min(v), np.max(v)) for k, v in metrics.items()}

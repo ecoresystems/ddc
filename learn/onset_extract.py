@@ -1,4 +1,7 @@
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
 import os
 
 import numpy as np
@@ -77,7 +80,7 @@ def test():
             out_pkl_name = os.path.split(pkl_fp)[1]
             out_pkl_fp = os.path.join(FLAGS.out_dir, out_pkl_name)
             with open(out_pkl_fp, 'wb') as f:
-                pickle.dump(song_export, f)
+                pickle.dump(song_export, f, protocol=2)
 
 
 def main(_):

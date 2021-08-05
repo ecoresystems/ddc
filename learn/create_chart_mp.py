@@ -32,7 +32,10 @@ def create_symbolic_charts(meta, song_features, frame_rate, sym_k):
 
 if __name__ == '__main__':
     import argparse
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
     import glob
     import json
     import os
@@ -105,7 +108,7 @@ if __name__ == '__main__':
                 out_fp = os.path.join(args.out_dir, out_name)
                 dataset_out_names.append(os.path.abspath(out_fp))
                 with open(out_fp, 'wb') as f:
-                    pickle.dump(song_data, f)
+                    pickle.dump(song_data, f, protocol=2)
 
         with open(os.path.join(args.out_dir, '{}.txt'.format(dataset_name)), 'w') as f:
             f.write('\n'.join(dataset_out_names))

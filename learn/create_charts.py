@@ -35,7 +35,7 @@ if __name__ == '__main__':
     try:
         import cPickle as pickle
     except:
-        import _pickle as pickle
+        import pickle
     import glob
     import json
     import os
@@ -86,8 +86,7 @@ if __name__ == '__main__':
                 if args.feats_dir:
                     song_feats_fp = os.path.join(args.feats_dir, '{}.pkl'.format(json_name))
                     with open(song_feats_fp, 'rb') as f:
-                        song_feats = pickle.load(f, protocol=2)
-
+                        song_feats = pickle.load(f)
                 if args.chart_type == 'onset':
                     song_charts = create_onset_charts(meta, song_feats, frame_rate)
                     song_data = (song_metadata, song_feats, song_charts)

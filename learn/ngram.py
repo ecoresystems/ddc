@@ -66,7 +66,10 @@ class NgramLanguageModel:
 if __name__ == '__main__':
     import argparse
     from collections import Counter
-    import cPickle as pickle
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
     import json
     import math
     import os
@@ -112,7 +115,7 @@ if __name__ == '__main__':
             ptotmle += model.mle(ngram)
 
         with open(args.model_fp, 'wb') as f:
-            pickle.dump(model, f)
+            pickle.dump(model, f, protocol=2)
 
     elif args.task == 'eval':
         with open(args.model_fp, 'rb') as f:
