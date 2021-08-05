@@ -12,6 +12,7 @@ if __name__ == '__main__':
     import argparse
     from collections import OrderedDict
     import json
+
     json.encoder.FLOAT_REPR = lambda f: ('%.6f' % f)
     from util import ez_name, get_subdirs
 

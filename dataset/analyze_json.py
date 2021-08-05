@@ -4,8 +4,6 @@ if __name__ == '__main__':
     import argparse
     from collections import Counter, defaultdict
     import json
-    import os
-    from util import get_subdirs
 
     parser = argparse.ArgumentParser()
     parser.add_argument('dataset_fps', type=str, nargs='+', help='List of dataset filepaths to analyze')
@@ -85,7 +83,8 @@ if __name__ == '__main__':
                 chart_coarse_to_superset[(coarse, coarse_next)].append(len(beats & beats_next) / float(len(beats)))
 
     chart_coarse_to_stream = {k: sum(l) / len(l) for k, l in chart_coarse_to_stream.items()}
-    chart_coarse_to_superset = {k: (reduce(lambda x, y: x + y, l) / len(l)) for k, l in chart_coarse_to_superset.items()}
+    chart_coarse_to_superset = {k: (reduce(lambda x, y: x + y, l) / len(l)) for k, l in
+                                chart_coarse_to_superset.items()}
 
     nsongs = len(json_fps)
     ncharts = sum(chart_feet.values())

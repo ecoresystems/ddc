@@ -1,14 +1,15 @@
 from functools import reduce
 
-import numpy as np
 import dill
 
 from chart import SymbolicChart, OnsetChart
 
+
 def create_onset_charts(meta, song_features, frame_rate):
     charts = []
     for raw_chart in meta['charts']:
-        metadata = (raw_chart['difficulty_coarse'], raw_chart['difficulty_fine'], raw_chart['type'], raw_chart['desc_or_author'])
+        metadata = (
+        raw_chart['difficulty_coarse'], raw_chart['difficulty_fine'], raw_chart['type'], raw_chart['desc_or_author'])
         try:
             onset_chart = OnsetChart(song_metadata, song_features, frame_rate, metadata, raw_chart['notes'])
         except Exception as e:
@@ -18,10 +19,12 @@ def create_onset_charts(meta, song_features, frame_rate):
 
     return charts
 
+
 def create_symbolic_charts(meta, song_features, frame_rate, sym_k):
     charts = []
     for raw_chart in meta['charts']:
-        metadata = (raw_chart['difficulty_coarse'], raw_chart['difficulty_fine'], raw_chart['type'], raw_chart['desc_or_author'])
+        metadata = (
+        raw_chart['difficulty_coarse'], raw_chart['difficulty_fine'], raw_chart['type'], raw_chart['desc_or_author'])
         try:
             sym_chart = SymbolicChart(song_metadata, song_features, frame_rate, metadata, raw_chart['notes'], sym_k)
         except ValueError as e:
@@ -31,13 +34,14 @@ def create_symbolic_charts(meta, song_features, frame_rate, sym_k):
 
     return charts
 
+
 if __name__ == '__main__':
     import argparse
+
     try:
         import cPickle as pickle
     except:
         import pickle
-    import glob
     import json
     import os
 

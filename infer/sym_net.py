@@ -2,13 +2,14 @@ import math
 import random
 from functools import reduce
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 from util import np_pad
 
 dtype = tf.float32
 np_dtype = dtype.as_numpy_dtype
+
 
 # https://github.com/sherjilozair/char-rnn-tensorflow/blob/master/model.py
 class SymNet:
@@ -70,7 +71,8 @@ class SymNet:
 
         # other/audio feats
         feats_other_unrolled = tf.placeholder(dtype, shape=[batch_size, in_nunroll, other_nfeats], name='feats_other')
-        feats_audio_unrolled = tf.placeholder(dtype, shape=[batch_size, in_nunroll, audio_context_len, audio_nbands, audio_nchannels], name='feats_audio')
+        feats_audio_unrolled = tf.placeholder(dtype, shape=[batch_size, in_nunroll, audio_context_len, audio_nbands,
+                                                            audio_nchannels], name='feats_audio')
 
         # targets
         if mode != 'gen':
@@ -88,7 +90,8 @@ class SymNet:
             syms = tf.reshape(syms_unrolled, shape=[batch_size * in_nunroll])
         elif sym_in_type == 'bagofarrows':
             syms = tf.reshape(syms_unrolled, shape=[batch_size * in_nunroll, in_len])
-        feats_audio = tf.reshape(feats_audio_unrolled, shape=[batch_size * in_nunroll, audio_context_len, audio_nbands, audio_nchannels])
+        feats_audio = tf.reshape(feats_audio_unrolled,
+                                 shape=[batch_size * in_nunroll, audio_context_len, audio_nbands, audio_nchannels])
         feats_other = tf.reshape(feats_other_unrolled, shape=[batch_size * in_nunroll, other_nfeats])
         if mode != 'gen':
             targets = tf.reshape(targets_unrolled, shape=[batch_size * out_nunroll])
@@ -131,7 +134,8 @@ class SymNet:
             for i, ((ntime, nband, nfilt), (ptime, pband)) in enumerate(zip(cnn_filter_shapes, cnn_pool)):
                 layer_name = 'cnn_{}'.format(i)
                 with tf.variable_scope(layer_name):
-                    filters = tf.get_variable('filters', [ntime, nband, nfilt_last, nfilt], initializer=cnn_init, dtype=dtype)
+                    filters = tf.get_variable('filters', [ntime, nband, nfilt_last, nfilt], initializer=cnn_init,
+                                              dtype=dtype)
                     biases = tf.get_variable('biases', [nfilt], initializer=tf.constant_initializer(0.1), dtype=dtype)
                 conv = tf.nn.conv2d(layer_last, filters, [1, 1, 1, 1], padding='VALID')
                 biased = tf.nn.bias_add(conv, biases)
@@ -158,8 +162,10 @@ class SymNet:
         # Reduce CNN dimensionality
         if cnn_dim_reduction_size >= 0:
             with tf.variable_scope('cnn_dim_reduction'):
-                cnn_dim_reduction_W = tf.get_variable('W', [nfeats_conv, cnn_dim_reduction_size], initializer=cnn_dim_reduction_init, dtype=dtype)
-                cnn_dim_reduction_b = tf.get_variable('b', [cnn_dim_reduction_size], initializer=tf.constant_initializer(0.0), dtype=dtype)
+                cnn_dim_reduction_W = tf.get_variable('W', [nfeats_conv, cnn_dim_reduction_size],
+                                                      initializer=cnn_dim_reduction_init, dtype=dtype)
+                cnn_dim_reduction_b = tf.get_variable('b', [cnn_dim_reduction_size],
+                                                      initializer=tf.constant_initializer(0.0), dtype=dtype)
 
                 nfeats_conv = cnn_dim_reduction_size
                 feats_conv = tf.nn.bias_add(tf.matmul(feats_conv, cnn_dim_reduction_W), cnn_dim_reduction_b)
@@ -184,7 +190,8 @@ class SymNet:
 
             with tf.variable_scope('rnn_proj'):
                 rnn_proj_sym_w = tf.get_variable('W', [nfeats_sym, rnn_size], initializer=rnn_proj_init, dtype=dtype)
-                rnn_proj_nosym_w = tf.get_variable('nosym_W', [nfeats_nosym, rnn_size], initializer=rnn_proj_init, dtype=dtype)
+                rnn_proj_nosym_w = tf.get_variable('nosym_W', [nfeats_nosym, rnn_size], initializer=rnn_proj_init,
+                                                   dtype=dtype)
                 rnn_proj_b = tf.get_variable('b', [rnn_size], initializer=tf.constant_initializer(0.0), dtype=dtype)
 
             rnn_inputs_sym = tf.matmul(feats_sym, rnn_proj_sym_w)
@@ -247,7 +254,8 @@ class SymNet:
                 layer_name = 'dnn_{}'.format(i)
                 with tf.variable_scope(layer_name):
                     dnn_w = tf.get_variable('W', shape=[last_layer_size, layer_size], initializer=dnn_init, dtype=dtype)
-                    dnn_b = tf.get_variable('b', shape=[layer_size], initializer=tf.constant_initializer(0.0), dtype=dtype)
+                    dnn_b = tf.get_variable('b', shape=[layer_size], initializer=tf.constant_initializer(0.0),
+                                            dtype=dtype)
                 projected = tf.nn.bias_add(tf.matmul(last_layer, dnn_w), dnn_b)
                 # TODO: argument nonlinearity, change bias to 0.1 if relu
                 last_layer = tf.nn.sigmoid(projected)
@@ -340,7 +348,8 @@ class SymNet:
             else:
                 raise NotImplementedError()
 
-            train_op = optimizer.apply_gradients(zip(grads, tvars), global_step=tf.contrib.framework.get_or_create_global_step())
+            train_op = optimizer.apply_gradients(zip(grads, tvars),
+                                                 global_step=tf.contrib.framework.get_or_create_global_step())
 
         self.syms = syms_unrolled
         self.feats_other = feats_other_unrolled
@@ -387,8 +396,10 @@ class SymNet:
             if arrow in self._IN_SPECIAL:
                 result = self._IN_SPECIAL.index(arrow)
             else:
-                multipliers = [int(math.pow(self.sym_narrowclasses, self.sym_narrows - i - 1)) for i in range(self.sym_narrows)]
-                result = len(self._IN_SPECIAL) + sum([multipliers[i] * int(arrowclass) for i, arrowclass in enumerate(arrow)])
+                multipliers = [int(math.pow(self.sym_narrowclasses, self.sym_narrows - i - 1)) for i in
+                               range(self.sym_narrows)]
+                result = len(self._IN_SPECIAL) + sum(
+                    [multipliers[i] * int(arrowclass) for i, arrowclass in enumerate(arrow)])
         elif encoding == 'bagofarrows':
             in_len = len(self._IN_SPECIAL) + (self.sym_narrows * self.sym_narrowclasses)
             result = np.zeros(in_len, dtype=np_dtype)
@@ -414,12 +425,17 @@ class SymNet:
             syms, feats_other, feats_audio = chart.get_random_subsequence(self.in_nunroll, **seq_feat_kwargs)
             assert len(syms) == self.in_nunroll + 1
             input_syms = [self.arrow_to_encoding(sym, self.sym_in_type) for sym in syms[:-1]]
-            target_syms = [self.arrow_to_encoding(sym, self.sym_out_type) for sym in syms[(self.in_nunroll - self.out_nunroll) + 1:]]
+            target_syms = [self.arrow_to_encoding(sym, self.sym_out_type) for sym in
+                           syms[(self.in_nunroll - self.out_nunroll) + 1:]]
 
             if diff_feet:
-                feats_other = np.append(feats_other, chart.get_foot_difficulty() * np.ones((self.in_nunroll, 1), dtype=np_dtype), axis=1)
+                feats_other = np.append(feats_other,
+                                        chart.get_foot_difficulty() * np.ones((self.in_nunroll, 1), dtype=np_dtype),
+                                        axis=1)
             if diff_aps:
-                feats_other = np.append(feats_other, chart.get_annotations_per_second() * np.ones((self.in_nunroll, 1), dtype=np_dtype), axis=1)
+                feats_other = np.append(feats_other, chart.get_annotations_per_second() * np.ones((self.in_nunroll, 1),
+                                                                                                  dtype=np_dtype),
+                                        axis=1)
 
             batch_syms_input.append(input_syms)
             batch_syms_target.append(target_syms)
@@ -469,14 +485,19 @@ class SymNet:
                 elif self.sym_in_type == 'bagofarrows':
                     input_syms = np.array(input_syms, dtype=np_dtype)
 
-                target_syms = [self.arrow_to_encoding(sym, self.sym_out_type) for sym in syms[(self.in_nunroll - self.out_nunroll) + 1:]]
+                target_syms = [self.arrow_to_encoding(sym, self.sym_out_type) for sym in
+                               syms[(self.in_nunroll - self.out_nunroll) + 1:]]
                 if self.sym_out_type == 'onehot':
                     target_syms = np.array(target_syms, dtype=np.int64)
 
                 if diff_feet:
-                    feats_other = np.append(feats_other, eval_chart.get_foot_difficulty() * np.ones((validlen, 1), dtype=np_dtype), axis=1)
+                    feats_other = np.append(feats_other,
+                                            eval_chart.get_foot_difficulty() * np.ones((validlen, 1), dtype=np_dtype),
+                                            axis=1)
                 if diff_aps:
-                    feats_other = np.append(feats_other, eval_chart.get_annotations_per_second() * np.ones((validlen, 1), dtype=np_dtype), axis=1)
+                    feats_other = np.append(feats_other,
+                                            eval_chart.get_annotations_per_second() * np.ones((validlen, 1),
+                                                                                              dtype=np_dtype), axis=1)
 
                 batch_syms.append(syms)
                 batch_syms_inputs.append(input_syms)

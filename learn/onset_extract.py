@@ -4,11 +4,10 @@ except:
     import pickle
 import os
 
-import numpy as np
 import tensorflow as tf
+from onset_cnn import OnsetCNN
 from tqdm import tqdm
 
-from onset_cnn import OnsetCNN
 from util import *
 
 tf.app.flags.DEFINE_string('data_txt_fp', '', 'Training dataset txt file with a list of pickled song files')
@@ -18,7 +17,8 @@ tf.app.flags.DEFINE_string('train_ckpt_fp', '', 'Path to model weights')
 tf.app.flags.DEFINE_integer('context_radius', 7, 'Past and future context per training example')
 tf.app.flags.DEFINE_integer('feat_dim', 80, 'Number of features per frame')
 tf.app.flags.DEFINE_integer('nchannels', 3, 'Number of channels per frame')
-tf.app.flags.DEFINE_bool('z_normalize_coeffs', False, 'Whether or not to normalize coeffs to zero mean, unit variance per band per channel.')
+tf.app.flags.DEFINE_bool('z_normalize_coeffs', False,
+                         'Whether or not to normalize coeffs to zero mean, unit variance per band per channel.')
 tf.app.flags.DEFINE_string('dense_layer_sizes', '256', 'Comma-separated list of dense layer sizes')
 tf.app.flags.DEFINE_integer('export_feature_layer', 0, 'Which dense layer to use for features')
 tf.app.flags.DEFINE_string('out_dir', '', 'Directory for output')
@@ -27,6 +27,7 @@ FLAGS = tf.app.flags.FLAGS
 dtype = tf.float32
 
 BATCH_SIZE = 512
+
 
 def test():
     print('Loading data...')

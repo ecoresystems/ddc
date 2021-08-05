@@ -1,5 +1,5 @@
-from collections import Counter
 import random
+
 
 class NgramSequence:
     def __init__(self, chart_notes):
@@ -17,6 +17,7 @@ class NgramSequence:
         sequence = prepend + self.sequence + append
         for i in range(len(sequence) - (k - 1)):
             yield tuple(sequence[i:i + k])
+
 
 class NgramLanguageModel:
     def __init__(self, k, ngram_counts):
@@ -37,7 +38,7 @@ class NgramLanguageModel:
         ngram_count = self.ngram_counts[ngram]
         history = ngram[:-1]
         history_count = self.history_counts[ngram[:-1]]
-        #print ngram, ngram_count, history_count
+        # print ngram, ngram_count, history_count
         return float(ngram_count) / history_count
 
     def laplace(self, ngram, smooth=1):
@@ -63,16 +64,16 @@ class NgramLanguageModel:
         else:
             raise NotImplementedError()
 
+
 if __name__ == '__main__':
     import argparse
     from collections import Counter
+
     try:
         import cPickle as pickle
     except:
         import pickle
     import json
-    import math
-    import os
     import numpy as np
 
     parser = argparse.ArgumentParser()
@@ -126,7 +127,7 @@ if __name__ == '__main__':
         for json_fp in json_fps:
             with open(json_fp, 'r') as f:
                 song_meta = json.loads(f.read())
-            #print song_meta['title']
+            # print song_meta['title']
 
             for chart_meta in song_meta['charts']:
                 if args.diff and args.diff != chart_meta['difficulty_coarse']:
@@ -141,7 +142,7 @@ if __name__ == '__main__':
                     if generated == actual:
                         hits += 1
                     ngram_prob = model.laplace(ngram)
-                    #print '{}: {}'.format(ngram, ngram_prob)
+                    # print '{}: {}'.format(ngram, ngram_prob)
                     chart_log_prob += np.log(ngram_prob)
                     chart_n += 1
                 cross_entropy = (-1.0 / chart_n) * chart_log_prob
@@ -150,15 +151,15 @@ if __name__ == '__main__':
 
         chart_entropies = np.array(chart_entropies)
         chart_perplexities = np.exp(chart_entropies)
-        #print chart_entropies
-        #print chart_perplexities
-        #print chart_entropies
-        #print chart_perplexities
-        #print chart_accuracies
-        #print 'Cross-entropy (nats): {}, std {}'.format(np.mean(chart_entropies), np.std(chart_entropies))
-        #print 'Perplexity: {}, std {}'.format(np.mean(chart_perplexities), np.std(chart_perplexities))
-        #print 'Accuracy: {}, std {}'.format(np.mean(chart_accuracies), np.std(chart_accuracies))
-        #print '-' * 30 + 'COPY PASTA' + '-' * 30
+        # print chart_entropies
+        # print chart_perplexities
+        # print chart_entropies
+        # print chart_perplexities
+        # print chart_accuracies
+        # print 'Cross-entropy (nats): {}, std {}'.format(np.mean(chart_entropies), np.std(chart_entropies))
+        # print 'Perplexity: {}, std {}'.format(np.mean(chart_perplexities), np.std(chart_perplexities))
+        # print 'Accuracy: {}, std {}'.format(np.mean(chart_accuracies), np.std(chart_accuracies))
+        # print '-' * 30 + 'COPY PASTA' + '-' * 30
         eval_funcs = [np.mean, np.std, np.min, np.max]
         eval_results = [[f(x) for f in eval_funcs] for x in [chart_entropies, chart_perplexities, chart_accuracies]]
         copy_pasta = []

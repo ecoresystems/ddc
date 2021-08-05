@@ -1,0 +1,8 @@
+numpy~=1.21.1
+scipy~=1.7.0
+tensorflow~=1.14.0
+essentia~=2.1b6.dev374
+sklearn~=0.0
+scikit-learn~=0.24.2
+dill~=0.3.4
+tqdm~=4.62.0

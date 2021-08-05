@@ -21,6 +21,7 @@ _CHART_TEMPL = """\
 {measures};\
 """
 
+
 def meta_to_sm(meta):
     subdiv = 64
     dt = 512.0 / 44100.0
@@ -34,9 +35,9 @@ def meta_to_sm(meta):
         ccoarse = chart['difficulty_coarse']
         cfine = chart['difficulty_fine']
         cnotes = chart['notes']
-        
+
         measures = []
-        timestep_to_code = {int(round(t / dt)) : code for _, t, code in cnotes}
+        timestep_to_code = {int(round(t / dt)): code for _, t, code in cnotes}
         max_s = cnotes[-1][1] + 15.0
         max_timestep = int(round(max_s / dt))
         if max_timestep % subdiv != 0:
@@ -44,7 +45,7 @@ def meta_to_sm(meta):
 
         null_code = '0' * len(cnotes[0][2])
         timesteps = [timestep_to_code.get(i, null_code) for i in range(max_timestep)]
-        measures = [timesteps[i:i+subdiv] for i in range(0, max_timestep, subdiv)]
+        measures = [timesteps[i:i + subdiv] for i in range(0, max_timestep, subdiv)]
         measures_txt = '\n,\n'.join(['\n'.join(measure) for measure in measures])
 
         chart_txt = _CHART_TEMPL.format(
@@ -63,6 +64,7 @@ def meta_to_sm(meta):
         music_fp=meta['music_fp'],
         bpm=bpm,
         charts='\n'.join(charts))
+
 
 if __name__ == '__main__':
     json_fp, sm_fp = sys.argv[1:3]

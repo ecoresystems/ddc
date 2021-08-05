@@ -3,15 +3,16 @@
 'Stepfiles' for Stepmania are organized into 'charts': lists of annotations for by an annotator for a song with some difficulty. Many charts can point to one song so we do not want to store song features for every chart. Instead, we have this helper class that will point to song features but store chart features. This way, our training and eval sets can be list of charts, instead of some mess with list of songs attached to multiple charts.
 """
 
-from collections import Counter
 import math
 import random
+from collections import Counter
 from functools import reduce
 
 import numpy as np
 
 from beatcalc import BeatCalc
 from util import make_onset_feature_context, np_pad
+
 
 class Chart(object):
     def __init__(self, song_metadata, metadata, annotations):
@@ -37,7 +38,7 @@ class Chart(object):
 
     def get_coarse_difficulty(self):
         return self.metadata[0]
-    
+
     def get_foot_difficulty(self):
         return self.metadata[1]
 
@@ -55,6 +56,7 @@ class Chart(object):
 
     def get_annotations_per_second(self):
         return self.annotations_per_second
+
 
 class OnsetChart(Chart):
     def __init__(self, song_metadata, song_features, frame_rate, metadata, annotations):
@@ -159,7 +161,8 @@ class OnsetChart(Chart):
         else:
             valid = set(range(self.get_first_onset(), self.get_last_onset() + 1))
             if exclude_onset_neighbors > 0:
-                onset_neighbors = [set([x + i for x in self.onsets]) | set([x - i for x in self.onsets]) for i in range(1, exclude_onset_neighbors + 1)]
+                onset_neighbors = [set([x + i for x in self.onsets]) | set([x - i for x in self.onsets]) for i in
+                                   range(1, exclude_onset_neighbors + 1)]
                 onset_neighbors = reduce(lambda x, y: x | y, onset_neighbors)
                 valid -= onset_neighbors
             if nunroll > 0:
@@ -173,7 +176,8 @@ class OnsetChart(Chart):
         assert n <= len(self.onsets)
         return random.sample(self.onsets, n)
 
-    def sample_blanks(self, n, exclude_onset_neighbors=0, exclude_pre_onsets=True, exclude_post_onsets=True, include_onsets=False):
+    def sample_blanks(self, n, exclude_onset_neighbors=0, exclude_pre_onsets=True, exclude_post_onsets=True,
+                      include_onsets=False):
         exclusion_params = (exclude_onset_neighbors, exclude_pre_onsets, exclude_post_onsets, include_onsets)
 
         if exclusion_params in self._blanks_memoized:
@@ -181,7 +185,8 @@ class OnsetChart(Chart):
         else:
             blanks = self.blanks
             if exclude_onset_neighbors > 0:
-                onset_neighbors = [set([x + i for x in self.onsets]) | set([x - i for x in self.onsets]) for i in range(1, exclude_onset_neighbors + 1)]
+                onset_neighbors = [set([x + i for x in self.onsets]) | set([x - i for x in self.onsets]) for i in
+                                   range(1, exclude_onset_neighbors + 1)]
                 onset_neighbors = reduce(lambda x, y: x | y, onset_neighbors)
                 blanks -= onset_neighbors
             if exclude_pre_onsets:
@@ -196,11 +201,11 @@ class OnsetChart(Chart):
         return random.sample(blanks, n)
 
     def get_subsequence(self,
-            subseq_start,
-            subseq_len,
-            dtype,
-            zack_hack_div_2=0,
-            **feat_kwargs):
+                        subseq_start,
+                        subseq_len,
+                        dtype,
+                        zack_hack_div_2=0,
+                        **feat_kwargs):
         seq_feats_audio = []
         seq_feats_other = []
         seq_y = []
@@ -212,7 +217,9 @@ class OnsetChart(Chart):
         zhmin = zack_hack_div_2
         zhmax = zack_hack_div_2 + subseq_len
 
-        return np.array(seq_feats_audio, dtype=dtype), np.array(seq_feats_other, dtype=dtype)[zhmin:zhmax], np.array(seq_y, dtype=dtype)[zhmin:zhmax]
+        return np.array(seq_feats_audio, dtype=dtype), np.array(seq_feats_other, dtype=dtype)[zhmin:zhmax], np.array(
+            seq_y, dtype=dtype)[zhmin:zhmax]
+
 
 class SymbolicChart(Chart):
     def __init__(self, song_metadata, song_features, frame_rate, metadata, annotations, pre=1, post=False):
@@ -266,73 +273,89 @@ class SymbolicChart(Chart):
         self.sequence.append(label)
 
     def get_subsequence(self,
-            subseq_start,
-            subseq_len,
-            meas_phase_cos=False,
-            meas_phase_sin=False,
-            meas_phase=False,
-            beat_phase_cos=False,
-            beat_phase_sin=False,
-            beat_phase=False,
-            beat_diff=False,
-            beat_diff_next=False,
-            beat_abs=False,
-            time_diff=False,
-            time_diff_next=False,
-            time_abs=False,
-            prog_diff=False,
-            prog_abs=False,
-            beat_phase_nquant=0,
-            beat_phase_max_nwraps=0,
-            meas_phase_nquant=0,
-            meas_phase_max_nwraps=0,
-            diff_feet_to_id=None,
-            diff_coarse_to_id=None,
-            diff_dipstick=False,
-            freetext_to_id=None,
-            audio_time_context_radius=0,
-            audio_deviation_max=0,
-            bucket_beat_diff_n=None,
-            bucket_beat_diff_max=None,
-            bucket_time_diff_n=None,
-            bucket_time_diff_max=None,
-            dtype=np.float32):
+                        subseq_start,
+                        subseq_len,
+                        meas_phase_cos=False,
+                        meas_phase_sin=False,
+                        meas_phase=False,
+                        beat_phase_cos=False,
+                        beat_phase_sin=False,
+                        beat_phase=False,
+                        beat_diff=False,
+                        beat_diff_next=False,
+                        beat_abs=False,
+                        time_diff=False,
+                        time_diff_next=False,
+                        time_abs=False,
+                        prog_diff=False,
+                        prog_abs=False,
+                        beat_phase_nquant=0,
+                        beat_phase_max_nwraps=0,
+                        meas_phase_nquant=0,
+                        meas_phase_max_nwraps=0,
+                        diff_feet_to_id=None,
+                        diff_coarse_to_id=None,
+                        diff_dipstick=False,
+                        freetext_to_id=None,
+                        audio_time_context_radius=0,
+                        audio_deviation_max=0,
+                        bucket_beat_diff_n=None,
+                        bucket_beat_diff_max=None,
+                        bucket_time_diff_n=None,
+                        bucket_time_diff_max=None,
+                        dtype=np.float32):
         syms = self.sequence[subseq_start:subseq_start + subseq_len + 1]
         nvalid = len(syms) - 1
 
         feats = np.zeros((nvalid, 0), dtype=dtype)
         if meas_phase_cos:
-            feats = np.append(feats, np.cos(2. * np.pi * np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.cos(
+                2. * np.pi * np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:,
+                                     np.newaxis], axis=1)
         if meas_phase_sin:
-            feats = np.append(feats, np.sin(2. * np.pi * np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.sin(
+                2. * np.pi * np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:,
+                                     np.newaxis], axis=1)
         if meas_phase:
-            feats = np.append(feats, np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_meas_phase[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if beat_phase:
-            feats = np.append(feats, np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if beat_phase_cos:
-            feats = np.append(feats, np.cos(2. * np.pi * np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.cos(
+                2. * np.pi * np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:,
+                                     np.newaxis], axis=1)
         if beat_phase_sin:
-            feats = np.append(feats, np.sin(2. * np.pi * np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.sin(
+                2. * np.pi * np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid], dtype=dtype))[:,
+                                     np.newaxis], axis=1)
         if beat_diff:
-            feats = np.append(feats, np.array(self.seq_beat_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_beat_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if beat_diff_next:
             feat = np.array(self.seq_beat_diff[subseq_start + 1:subseq_start + nvalid + 1], dtype=dtype)
             feat = np_pad(feat, nvalid, axis=0)
             feats = np.append(feats, feat[:, np.newaxis], axis=1)
         if beat_abs:
-            feats = np.append(feats, np.array(self.seq_beat_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_beat_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if time_diff:
-            feats = np.append(feats, np.array(self.seq_time_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_time_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if time_diff_next:
             feat = np.array(self.seq_time_diff[subseq_start + 1:subseq_start + nvalid + 1], dtype=dtype)
             feat = np_pad(feat, nvalid, axis=0)
             feats = np.append(feats, feat[:, np.newaxis], axis=1)
         if time_abs:
-            feats = np.append(feats, np.array(self.seq_time_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_time_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if prog_diff:
-            feats = np.append(feats, np.array(self.seq_prog_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_prog_diff[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if prog_abs:
-            feats = np.append(feats, np.array(self.seq_prog_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:, np.newaxis], axis=1)
+            feats = np.append(feats, np.array(self.seq_prog_abs[subseq_start:subseq_start + nvalid], dtype=dtype)[:,
+                                     np.newaxis], axis=1)
         if beat_phase_nquant > 0:
             beat_phase = np.array(self.seq_beat_phase[subseq_start:subseq_start + nvalid])
             beat_phase_quant = np.rint(beat_phase_nquant * beat_phase).astype(np.int)
@@ -425,7 +448,7 @@ class SymbolicChart(Chart):
 
         max_idx = self.get_nannotations() - subseq_len
         i = random.randint(0, max_idx)
-        #TODO: first sequence incredibly unlikely to appear, balance this
+        # TODO: first sequence incredibly unlikely to appear, balance this
 
         return self.get_subsequence(i, subseq_len, **feat_kwargs)
 

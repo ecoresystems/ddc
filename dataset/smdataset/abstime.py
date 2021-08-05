@@ -1,7 +1,9 @@
 _EPSILON = 1e-6
 
+
 def bpm_to_spb(bpm):
     return 60.0 / bpm
+
 
 def calc_segment_lengths(bpms):
     assert len(bpms) > 0
@@ -10,6 +12,7 @@ def calc_segment_lengths(bpms):
         spb = bpm_to_spb(bpms[i][1])
         segment_lengths.append(spb * (bpms[i + 1][0] - bpms[i][0]))
     return segment_lengths
+
 
 def calc_abs_for_beat(offset, bpms, stops, segment_lengths, beat):
     bpm_idx = 0
@@ -35,6 +38,7 @@ def calc_abs_for_beat(offset, bpms, stops, segment_lengths, beat):
     partial_segment = partial_segment_spb * (beat - bpms[bpm_idx][0])
 
     return full_segment_total + partial_segment - offset + stop_len_cumulative
+
 
 def calc_note_beats_and_abs_times(offset, bpms, stops, note_data):
     segment_lengths = calc_segment_lengths(bpms)
@@ -69,7 +73,7 @@ def calc_note_beats_and_abs_times(offset, bpms, stops, note_data):
         del note_beats_abs_times[del_idx]
         del beat_times[del_idx]
 
-    #TODO: remove when stable
+    # TODO: remove when stable
     assert sorted(beat_times) == beat_times
 
     return note_beats_abs_times

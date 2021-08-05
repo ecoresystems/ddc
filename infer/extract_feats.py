@@ -1,6 +1,6 @@
-import essentia
-from essentia.standard import MonoLoader, FrameGenerator, Windowing, Spectrum, MelBands
 import numpy as np
+from essentia.standard import MonoLoader, FrameGenerator, Windowing, Spectrum, MelBands
+
 
 def create_analyzers(fs=44100.0,
                      nhop=512,
@@ -19,6 +19,7 @@ def create_analyzers(fs=44100.0,
                        sampleRate=fs)
         analyzers.append((window, spectrum, mel))
     return analyzers
+
 
 def extract_mel_feats(audio_fp, analyzers, fs=44100.0, nhop=512, nffts=[1024, 2048, 4096], log_scale=True):
     # Extract features
@@ -41,6 +42,7 @@ def extract_mel_feats(audio_fp, analyzers, fs=44100.0, nhop=512, nffts=[1024, 20
         feat_channels = np.log(feat_channels + 1e-16)
 
     return feat_channels
+
 
 if __name__ == '__main__':
     import argparse
@@ -93,7 +95,8 @@ if __name__ == '__main__':
             if not os.path.exists(music_fp):
                 raise ValueError('No music for {}'.format(json_fp))
 
-            song_feats = extract_mel_feats(music_fp, analyzers, fs=44100.0, nhop=args.nhop, nffts=nffts, log_scale=args.log_scale)
+            song_feats = extract_mel_feats(music_fp, analyzers, fs=44100.0, nhop=args.nhop, nffts=nffts,
+                                           log_scale=args.log_scale)
 
             feats_fp = os.path.join(args.out_dir, '{}.pkl'.format(song_name))
             with open(feats_fp, 'wb') as f:

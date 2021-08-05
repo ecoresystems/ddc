@@ -2,20 +2,19 @@ try:
     import cPickle as pickle
 except:
     import pickle
-import os
-import math
-import unicodedata
 
 import numpy as np
 from scipy.signal import argrelextrema
 
+
 def load_id_dict(id_dict_fp):
     with open(id_dict_fp, 'r') as f:
-        id_dict = {k:int(i) for k,i in [x.split(',') for x in f.read().splitlines()]}
+        id_dict = {k: int(i) for k, i in [x.split(',') for x in f.read().splitlines()]}
         if '' in id_dict:
             id_dict[None] = id_dict['']
             del id_dict['']
         return id_dict
+
 
 def ez_name(x):
     x = x.encode('ascii', 'replace')
@@ -27,6 +26,7 @@ def ez_name(x):
         else:
             x_clean.append('_')
     return ''.join(x_clean)
+
 
 def stride_csv_arg_list(arg, stride, cast=int):
     assert stride > 0
@@ -42,11 +42,13 @@ def stride_csv_arg_list(arg, stride, cast=int):
         result.append(subl)
     return result
 
+
 def np_pad(x, pad_to, value=0, axis=-1):
     assert x.shape[axis] <= pad_to
     pad = [(0, 0) for i in range(x.ndim)]
     pad[axis] = (0, pad_to - x.shape[axis])
     return np.pad(x, pad_width=pad, mode='constant', constant_values=value)
+
 
 def open_dataset_fps(*args):
     datasets = []
@@ -64,12 +66,14 @@ def open_dataset_fps(*args):
         datasets.append(dataset)
     return datasets[0] if len(datasets) == 1 else datasets
 
+
 def select_channels(dataset, channels):
     for i, (song_metadata, song_features, song_charts) in enumerate(dataset):
         song_features_selected = song_features[:, :, channels]
         dataset[i] = (song_metadata, song_features_selected, song_charts)
         for chart in song_charts:
             chart.song_features = song_features_selected
+
 
 def apply_z_norm(dataset, mean_per_band, std_per_band):
     for i, (song_metadata, song_features, song_charts) in enumerate(dataset):
@@ -79,6 +83,7 @@ def apply_z_norm(dataset, mean_per_band, std_per_band):
         for chart in song_charts:
             chart.song_features = song_features_z
 
+
 def calc_mean_std_per_band(dataset):
     mean_per_band_per_song = [np.mean(song_features, axis=0) for _, song_features, _ in dataset]
     std_per_band_per_song = [np.std(song_features, axis=0) for _, song_features, _ in dataset]
@@ -87,15 +92,18 @@ def calc_mean_std_per_band(dataset):
 
     return mean_per_band, std_per_band
 
+
 def flatten_dataset_to_charts(dataset):
     return [item for sublist in [x[2] for x in dataset] for item in sublist]
+
 
 def filter_chart_type(charts, chart_type):
     return filter(lambda x: x.get_type() == chart_type, charts)
 
+
 def make_onset_feature_context(song_features, frame_idx, radius):
     nframes = song_features.shape[0]
-    
+
     assert nframes > 0
 
     frame_idxs = range(frame_idx - radius, frame_idx + radius + 1)
@@ -108,6 +116,7 @@ def make_onset_feature_context(song_features, frame_idx, radius):
 
     return context
 
+
 def find_pred_onsets(scores, window):
     if window.shape[0] > 0:
         onset_function = np.convolve(scores, window, mode='same')
@@ -116,6 +125,7 @@ def find_pred_onsets(scores, window):
     # see page 592 of "Universal onset detection with bidirectional long short-term memory neural networks"
     maxima = argrelextrema(onset_function, np.greater_equal, order=1)[0]
     return set(list(maxima))
+
 
 def align_onsets_to_sklearn(true_onsets, pred_onsets, scores, tolerance=0):
     # Build one-to-many dicts of candidate matches

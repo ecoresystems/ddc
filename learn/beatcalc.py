@@ -1,6 +1,8 @@
 import numpy as np
 
 _EPSILON = 1e-6
+
+
 class BeatCalc(object):
     # for simplicity, we will represent a "stop" as an impossibly sharp tempo change
     def __init__(self, offset, beat_bpm, beat_stop):
@@ -71,6 +73,7 @@ class BeatCalc(object):
         beat_left = self.segment_beat[seg_idx]
         bps = self.segment_bps[seg_idx]
         return beat_left + ((time - time_left) * bps)
+
 
 if __name__ == '__main__':
     bc = BeatCalc(0.05, [(0.0, 120.0), (32.0, 60.0), (64.0, 120.0)], [(16.0, 5.0)])

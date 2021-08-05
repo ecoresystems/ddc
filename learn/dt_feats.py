@@ -2,6 +2,7 @@ import numpy as np
 
 if __name__ == '__main__':
     import argparse
+
     try:
         import cPickle as pickle
     except:

@@ -1,18 +1,17 @@
-import math
-import os
 import shutil
 
-import essentia
-from essentia.standard import MetadataReader
 import numpy as np
 import tensorflow as tf
+from essentia.standard import MetadataReader
 from scipy.signal import argrelextrema
+
 assert tf.__version__ == '0.12.1'
 
 from onset_net import OnsetNet
 from sym_net import SymNet
-from util import apply_z_norm, make_onset_feature_context
+from util import make_onset_feature_context
 from extract_feats import extract_mel_feats
+
 
 def load_sp_model(sp_ckpt_fp, sess, batch_size=128):
     with tf.variable_scope('model_sp'):
@@ -23,9 +22,9 @@ def load_sp_model(sp_ckpt_fp, sess, batch_size=128):
             audio_nbands=80,
             audio_nchannels=3,
             nfeats=5,
-            cnn_filter_shapes=[(7,3,10),(3,3,20)],
+            cnn_filter_shapes=[(7, 3, 10), (3, 3, 20)],
             cnn_init=None,
-            cnn_pool=[(1,3),(1,3)],
+            cnn_pool=[(1, 3), (1, 3)],
             cnn_rnn_zack=False,
             rnn_cell_type=None,
             rnn_size=0,
@@ -33,7 +32,7 @@ def load_sp_model(sp_ckpt_fp, sess, batch_size=128):
             rnn_init=None,
             rnn_nunroll=1,
             rnn_keep_prob=1.0,
-            dnn_sizes=[256,128],
+            dnn_sizes=[256, 128],
             dnn_init=None,
             dnn_keep_prob=1.0,
             dnn_nonlin='relu',
@@ -46,6 +45,7 @@ def load_sp_model(sp_ckpt_fp, sess, batch_size=128):
     saver = tf.train.Saver(model_sp_vars)
     saver.restore(sess, sp_ckpt_fp)
     return model_sp
+
 
 def load_ss_model(ss_ckpt_fp, sess):
     with tf.variable_scope('model_ss'):
@@ -84,14 +84,15 @@ def load_ss_model(ss_ckpt_fp, sess):
     saver.restore(sess, ss_ckpt_fp)
     return model_ss
 
+
 # These are thresholds producing best perchart Fscore on valid set
 _DIFFS = ['Beginner', 'Easy', 'Medium', 'Hard', 'Challenge']
 _DIFF_TO_COARSE_FINE_AND_THRESHOLD = {
-    'Beginner':     (0, 1, 0.15325437),
-    'Easy':         (1, 3, 0.23268291),
-    'Medium':         (2, 5, 0.29456162),
-    'Hard':         (3, 7, 0.29084727),
-    'Challenge':    (4, 9, 0.28875697)
+    'Beginner': (0, 1, 0.15325437),
+    'Easy': (1, 3, 0.23268291),
+    'Medium': (2, 5, 0.29456162),
+    'Hard': (3, 7, 0.29084727),
+    'Challenge': (4, 9, 0.28875697)
 }
 
 _SUBDIV = 192
@@ -120,13 +121,16 @@ _CHART_TEMPL = """\
 {measures};\
 """
 
+
 class CreateChartException(Exception):
     pass
+
 
 def weighted_pick(weights):
     t = np.cumsum(weights)
     s = np.sum(weights)
-    return(int(np.searchsorted(t, np.random.rand(1)*s)))
+    return (int(np.searchsorted(t, np.random.rand(1) * s)))
+
 
 def create_chart_dir(
         artist, title,
@@ -202,7 +206,7 @@ def create_chart_dir(
         times_arr = [placed_times[0]] + placed_times + [placed_times[-1]]
         selected_steps = []
         for i in range(1, len(times_arr) - 1):
-            dt_prev, dt_next = times_arr[i] - times_arr[i-1], times_arr[i+1] - times_arr[i]
+            dt_prev, dt_next = times_arr[i] - times_arr[i - 1], times_arr[i + 1] - times_arr[i]
             feed_dict = {
                 ss_model.syms: np.array([[ss_model.arrow_to_encoding(step_prev, 'bagofarrows')]], dtype=np.float32),
                 ss_model.feats_other: np.array([[[dt_prev, dt_next]]], dtype=np.float32),
@@ -220,12 +224,12 @@ def create_chart_dir(
         assert len(placed_times) == len(selected_steps)
 
         print('Creating chart text')
-        time_to_step = {int(round(t * _HZ)) : step for t, step in zip(placed_times, selected_steps)}
+        time_to_step = {int(round(t * _HZ)): step for t, step in zip(placed_times, selected_steps)}
         max_subdiv = max(time_to_step.keys())
         if max_subdiv % _SUBDIV != 0:
             max_subdiv += _SUBDIV - (max_subdiv % _SUBDIV)
         full_steps = [time_to_step.get(i, '0000') for i in range(max_subdiv)]
-        measures = [full_steps[i:i+_SUBDIV] for i in range(0, max_subdiv, _SUBDIV)]
+        measures = [full_steps[i:i + _SUBDIV] for i in range(0, max_subdiv, _SUBDIV)]
         measures_txt = '\n,\n'.join(['\n'.join(measure) for measure in measures])
         chart_txt = _CHART_TEMPL.format(
             ccoarse=_DIFFS[coarse],
@@ -267,7 +271,7 @@ def create_chart_dir(
 
 import tempfile
 
-from flask import Flask, jsonify, request, send_from_directory, send_file
+from flask import Flask, request, send_from_directory, send_file
 
 _FRONTEND_DIST_DIR = 'frontend'
 app = Flask(
@@ -340,9 +344,9 @@ def choreograph():
         shutil.rmtree(out_dir)
 
         return send_file(
-                z.name,
-                as_attachment=True,
-                attachment_filename='{}.zip'.format(song_id))
+            z.name,
+            as_attachment=True,
+            attachment_filename='{}.zip'.format(song_id))
 
 
 @app.after_request
@@ -389,7 +393,7 @@ if __name__ == '__main__':
     config.log_device_placement = True
     config.allow_soft_placement = True
     config.gpu_options.allow_growth = True
-    #config.gpu_options.per_process_gpu_memory_fraction = 1.0
+    # config.gpu_options.per_process_gpu_memory_fraction = 1.0
     SESS = tf.Session(graph=graph, config=config)
 
     global NORM
@@ -404,7 +408,7 @@ if __name__ == '__main__':
     global IDX_TO_LABEL
     print('Loading labels')
     with open(ARGS.labels_txt_fp, 'r') as f:
-        IDX_TO_LABEL = {i + 1:l for i, l in enumerate(f.read().splitlines())}
+        IDX_TO_LABEL = {i + 1: l for i, l in enumerate(f.read().splitlines())}
 
     global SP_MODEL, SS_MODEL
     with graph.as_default():

@@ -1,6 +1,5 @@
 import logging
 import re
-import traceback
 
 parlog = logging
 
@@ -10,13 +9,18 @@ int_parser = lambda x: int(x.strip()) if x.strip() else None
 bool_parser = lambda x: True if x.strip() == 'YES' else False
 str_parser = lambda x: x.strip() if x.strip() else None
 float_parser = lambda x: float(x.strip()) if x.strip() else None
+
+
 def kv_parser(k_parser, v_parser):
     def parser(x):
         if not x:
             return (None, None)
         k, v = x.split('=', 1)
         return k_parser(k), v_parser(v)
+
     return parser
+
+
 def list_parser(x_parser):
     def parser(l):
         l_strip = l.strip()
@@ -24,7 +28,10 @@ def list_parser(x_parser):
             return []
         else:
             return [x_parser(x) for x in l_strip.split(',')]
+
     return parser
+
+
 def bpms_parser(x):
     bpms = list_parser(kv_parser(float_parser, float_parser))(x)
 
@@ -52,6 +59,8 @@ def bpms_parser(x):
         parlog.warning('One or more (beat, BPM) pairs begin on the same beat, using last listed')
 
     return bpms_cleaned
+
+
 def stops_parser(x):
     stops = list_parser(kv_parser(float_parser, float_parser))(x)
 
@@ -67,6 +76,8 @@ def stops_parser(x):
             raise ValueError('Nonascending list of beats in stops')
         beat_last = beat
     return stops
+
+
 def notes_parser(x):
     pattern = r'([^:]*):' * 5 + r'([^;:]*)'
     notes_split = re.findall(pattern, x)
@@ -97,18 +108,21 @@ def notes_parser(x):
         raise ValueError('Nonstandard chart type {} detected'.format(chart_type))
 
     return (str_parser(notes_split[0]),
-        str_parser(notes_split[1]),
-        str_parser(notes_split[2]),
-        int_parser(notes_split[3]),
-        list_parser(float_parser)(notes_split[4]),
-        measures_clean
-    )
+            str_parser(notes_split[1]),
+            str_parser(notes_split[2]),
+            int_parser(notes_split[3]),
+            list_parser(float_parser)(notes_split[4]),
+            measures_clean
+            )
+
 
 def unsupported_parser(attr_name):
     def parser(x):
         raise ValueError('Unsupported attribute: {} with value {}'.format(attr_name, x))
         return None
+
     return parser
+
 
 ATTR_NAME_TO_PARSER = {
     'title': str_parser,
@@ -143,6 +157,7 @@ ATTR_NAME_TO_PARSER = {
     'notes': notes_parser
 }
 ATTR_MULTI = ['notes']
+
 
 def parse_sm_txt(sm_txt):
     attrs = {attr_name: [] for attr_name in ATTR_MULTI}

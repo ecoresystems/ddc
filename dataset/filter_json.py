@@ -15,11 +15,16 @@ if __name__ == '__main__':
     parser.add_argument('--min_chart_feet', type=int, help='Min chart feet; if negative, no min')
     parser.add_argument('--max_chart_feet', type=int, help='Max chart feet; if negative, no max')
     parser.add_argument('--substitutions', type=str, help='CSV pairs of arrow type substitutions')
-    parser.add_argument('--arrow_types', type=str, help='CSV whitelist of arrow types; \'0\' included by default; if empty, no filter')
-    parser.add_argument('--max_jump_size', type=int, help='Maximum number of simultaneous arrows allowed; if negative, no max')
-    parser.add_argument('--remove_zeros', dest='remove_zeros', action='store_true', help='If set, removes all noops (e.g. 0000) from annotations')
-    parser.add_argument('--keep_empty', dest='keep_empty', action='store_true', help='If set, JSON for songs with all charts filtered will be preserved')
-    parser.add_argument('--reduce_ppms', dest='reduce_ppms', action='store_true', help='If set, pulse per measure will be filtered if it was previously overspecified')
+    parser.add_argument('--arrow_types', type=str,
+                        help='CSV whitelist of arrow types; \'0\' included by default; if empty, no filter')
+    parser.add_argument('--max_jump_size', type=int,
+                        help='Maximum number of simultaneous arrows allowed; if negative, no max')
+    parser.add_argument('--remove_zeros', dest='remove_zeros', action='store_true',
+                        help='If set, removes all noops (e.g. 0000) from annotations')
+    parser.add_argument('--keep_empty', dest='keep_empty', action='store_true',
+                        help='If set, JSON for songs with all charts filtered will be preserved')
+    parser.add_argument('--reduce_ppms', dest='reduce_ppms', action='store_true',
+                        help='If set, pulse per measure will be filtered if it was previously overspecified')
     parser.add_argument('--ppms', type=str, help='CSV whitelist of allowable pulses per measure; if empty, no filter')
     parser.add_argument('--permutations', type=str, help='List of permutations to include in output')
     parser.add_argument('--choose', dest='choose', action='store_true', help='If set, choose from list of packs')
@@ -46,7 +51,7 @@ if __name__ == '__main__':
     substitutions = list(filter(lambda x: bool(x), [x.strip() for x in args.substitutions.split(',')]))
     assert len(substitutions) % 2 == 0
     substitutions = [(substitutions[i], substitutions[i + 1]) for i in range(0, len(substitutions), 2)]
-    substitutions = {x.strip():y.strip() for x, y in substitutions}
+    substitutions = {x.strip(): y.strip() for x, y in substitutions}
     arrow_types = set(filter(lambda x: bool(x), [x.strip() for x in args.arrow_types.split(',')]))
     arrow_types.add('0')
     ppms = set([int(x.strip()) for x in filter(lambda x: bool(x), args.ppms.split(','))])
@@ -149,6 +154,7 @@ if __name__ == '__main__':
 
                 if args.reduce_ppms:
                     import primefac
+
                     measures = {}
                     for note in chart_meta['notes']:
                         measure = note[0][0]
@@ -160,7 +166,7 @@ if __name__ == '__main__':
                     notes_cleaned = []
                     for measure in measures:
                         denominator = measure[0][0][1]
-                        divisors = list( primefac.primefac(denominator))
+                        divisors = list(primefac.primefac(denominator))
                         numerators = [note[0][2] for note in measure]
                         factor = 1
                         for divisor in divisors:
@@ -170,7 +176,9 @@ if __name__ == '__main__':
 
                         measure_old = measure
                         if factor > 1:
-                            measure = [([note[0][0], note[0][1] // factor, note[0][2] // factor], note[1], note[2], note[3]) for note in measure]
+                            measure = [
+                                ([note[0][0], note[0][1] // factor, note[0][2] // factor], note[1], note[2], note[3])
+                                for note in measure]
 
                         for note in measure:
                             notes_cleaned.append(note)

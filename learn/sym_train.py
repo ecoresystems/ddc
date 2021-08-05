@@ -1,4 +1,5 @@
 from collections import defaultdict
+
 try:
     import cPickle as pickle
 except:
@@ -6,7 +7,6 @@ except:
 import os
 import time
 
-import numpy as np
 import tensorflow as tf
 
 from sym_net import SymNet
@@ -94,6 +94,7 @@ tf.app.flags.DEFINE_string('generate_vocab_fp', '', '')
 FLAGS = tf.app.flags.FLAGS
 dtype = tf.float32
 
+
 def main(_):
     assert FLAGS.experiment_dir
     do_train = FLAGS.nepochs != 0 and bool(FLAGS.train_txt_fp)
@@ -134,7 +135,8 @@ def main(_):
     charts_train = filter(lambda x: x.get_nannotations() >= FLAGS.nunroll, charts_train)
     if len(charts_train) != charts_train_len:
         print('{} charts too small for training'.format(charts_train_len - len(charts_train)))
-    print('Train set: {} charts, valid set: {} charts, test set: {} charts'.format(len(charts_train), len(charts_valid), len(charts_test)))
+    print('Train set: {} charts, valid set: {} charts, test set: {} charts'.format(len(charts_train), len(charts_valid),
+                                                                                   len(charts_test)))
 
     # Load ID maps
     diff_feet_to_id = None
@@ -197,7 +199,9 @@ def main(_):
     print('Feature configuration (nfeats={}): {}'.format(nfeats, feats_config))
 
     # Create model config
-    rnn_proj_init = tf.constant_initializer(0.0, dtype=dtype) if FLAGS.sym_rnn_pretrain_model_ckpt_fp else tf.uniform_unit_scaling_initializer(factor=1.0, dtype=dtype)
+    rnn_proj_init = tf.constant_initializer(0.0,
+                                            dtype=dtype) if FLAGS.sym_rnn_pretrain_model_ckpt_fp else tf.uniform_unit_scaling_initializer(
+        factor=1.0, dtype=dtype)
     model_config = {
         'nunroll': FLAGS.nunroll,
         'sym_in_type': FLAGS.sym_in_type,
@@ -308,7 +312,8 @@ def main(_):
             examples_per_batch *= model_train.out_nunroll
             batches_per_epoch = train_nexamples // examples_per_batch
             nbatches = FLAGS.nepochs * batches_per_epoch
-            print('{} frames in data, {} batches per epoch, {} batches total'.format(train_nexamples, batches_per_epoch, nbatches))
+            print('{} frames in data, {} batches per epoch, {} batches total'.format(train_nexamples, batches_per_epoch,
+                                                                                     nbatches))
 
             # Init epoch
             lr_summary = model_train.assign_lr(sess, FLAGS.lr)
@@ -321,7 +326,8 @@ def main(_):
             eval_best_accuracy = float('-inf')
             while FLAGS.nepochs < 0 or batch_num < nbatches:
                 batch_time_start = time.time()
-                syms, feats_other, feats_audio, targets, target_weights = model_train.prepare_train_batch(charts_train, **feats_config)
+                syms, feats_other, feats_audio, targets, target_weights = model_train.prepare_train_batch(charts_train,
+                                                                                                          **feats_config)
                 feed_dict = {
                     model_train.syms: syms,
                     model_train.feats_other: feats_other,
@@ -346,7 +352,11 @@ def main(_):
 
                     epoch_xentropy = np.mean(epoch_xentropies)
                     print('Epoch mean cross-entropy (nats) {}'.format(epoch_xentropy))
-                    epoch_summary = sess.run(epoch_summaries, feed_dict={epoch_mean_xentropy: epoch_xentropy, epoch_mean_time: np.mean(epoch_times), epoch_var_xentropy: np.var(epoch_xentropies), epoch_var_time: np.var(epoch_times), epoch_time_total: np.sum(epoch_times)})
+                    epoch_summary = sess.run(epoch_summaries, feed_dict={epoch_mean_xentropy: epoch_xentropy,
+                                                                         epoch_mean_time: np.mean(epoch_times),
+                                                                         epoch_var_xentropy: np.var(epoch_xentropies),
+                                                                         epoch_var_time: np.var(epoch_times),
+                                                                         epoch_time_total: np.sum(epoch_times)})
                     summary_writer.add_summary(epoch_summary, batch_num)
 
                     epoch_xentropies = []
@@ -371,7 +381,8 @@ def main(_):
                         neg_log_prob_sum = 0.0
                         correct_predictions_sum = 0.0
                         weight_sum = 0.0
-                        for syms, syms_in, feats_other, feats_audio, targets, target_weights in model_eval.eval_iter(eval_chart, **feats_config_eval):
+                        for syms, syms_in, feats_other, feats_audio, targets, target_weights in model_eval.eval_iter(
+                                eval_chart, **feats_config_eval):
                             feed_dict = {
                                 model_eval.syms: syms_in,
                                 model_eval.feats_other: feats_other,
@@ -381,9 +392,12 @@ def main(_):
                             }
                             if model_eval.do_rnn:
                                 feed_dict[model_eval.initial_state] = state
-                                xentropies, correct_predictions, state = sess.run([model_eval.neg_log_lhoods, model_eval.correct_predictions, model_eval.final_state], feed_dict=feed_dict)
+                                xentropies, correct_predictions, state = sess.run(
+                                    [model_eval.neg_log_lhoods, model_eval.correct_predictions, model_eval.final_state],
+                                    feed_dict=feed_dict)
                             else:
-                                xentropies, correct_predictions = sess.run([model_eval.neg_log_lhoods, model_eval.correct_predictions], feed_dict=feed_dict)
+                                xentropies, correct_predictions = sess.run(
+                                    [model_eval.neg_log_lhoods, model_eval.correct_predictions], feed_dict=feed_dict)
 
                             neg_log_prob_sum += np.sum(xentropies)
                             correct_predictions_sum += np.sum(correct_predictions)
@@ -410,14 +424,16 @@ def main(_):
                     if xentropy_avg_mean < eval_best_xentropy_avg:
                         print('Xentropy {} better than previous {}'.format(xentropy_avg_mean, eval_best_xentropy_avg))
                         ckpt_fp = os.path.join(FLAGS.experiment_dir, 'onset_net_early_stop_xentropy_avg')
-                        model_early_stop_xentropy_avg.save(sess, ckpt_fp, global_step=tf.contrib.framework.get_or_create_global_step())
+                        model_early_stop_xentropy_avg.save(sess, ckpt_fp,
+                                                           global_step=tf.contrib.framework.get_or_create_global_step())
                         eval_best_xentropy_avg = xentropy_avg_mean
 
                     accuracy_mean = metrics['accuracy'][0]
                     if accuracy_mean > eval_best_accuracy:
                         print('Accuracy {} better than previous {}'.format(accuracy_mean, eval_best_accuracy))
                         ckpt_fp = os.path.join(FLAGS.experiment_dir, 'onset_net_early_stop_accuracy')
-                        model_early_stop_accuracy.save(sess, ckpt_fp, global_step=tf.contrib.framework.get_or_create_global_step())
+                        model_early_stop_accuracy.save(sess, ckpt_fp,
+                                                       global_step=tf.contrib.framework.get_or_create_global_step())
                         eval_best_accuracy = accuracy_mean
 
                     print('Done evaluating')
@@ -434,7 +450,8 @@ def main(_):
                 neg_log_prob_sum = 0.0
                 correct_predictions_sum = 0.0
                 weight_sum = 0.0
-                for syms, syms_in, feats_other, feats_audio, targets, target_weights in model_eval.eval_iter(test_chart, **feats_config_eval):
+                for syms, syms_in, feats_other, feats_audio, targets, target_weights in model_eval.eval_iter(test_chart,
+                                                                                                             **feats_config_eval):
                     feed_dict = {
                         model_eval.syms: syms_in,
                         model_eval.feats_other: feats_other,
@@ -444,9 +461,12 @@ def main(_):
                     }
                     if model_eval.do_rnn:
                         feed_dict[model_eval.initial_state] = state
-                        xentropies, correct_predictions, state = sess.run([model_eval.neg_log_lhoods, model_eval.correct_predictions, model_eval.final_state], feed_dict=feed_dict)
+                        xentropies, correct_predictions, state = sess.run(
+                            [model_eval.neg_log_lhoods, model_eval.correct_predictions, model_eval.final_state],
+                            feed_dict=feed_dict)
                     else:
-                        xentropies, correct_predictions = sess.run([model_eval.neg_log_lhoods, model_eval.correct_predictions], feed_dict=feed_dict)
+                        xentropies, correct_predictions = sess.run(
+                            [model_eval.neg_log_lhoods, model_eval.correct_predictions], feed_dict=feed_dict)
 
                     neg_log_prob_sum += np.sum(xentropies)
                     correct_predictions_sum += np.sum(correct_predictions)
@@ -477,12 +497,12 @@ def main(_):
                 step_times = [float(x) for x in f.read().split(',')]
 
             with open(FLAGS.generate_vocab_fp, 'r') as f:
-                idx_to_sym = {i:k for i, k in enumerate(f.read().splitlines())}
+                idx_to_sym = {i: k for i, k in enumerate(f.read().splitlines())}
 
             def weighted_pick(weights):
                 t = np.cumsum(weights)
                 s = np.sum(weights)
-                return(int(np.searchsorted(t, np.random.rand(1)*s)))
+                return (int(np.searchsorted(t, np.random.rand(1) * s)))
 
             state = sess.run(model_gen.initial_state)
             sym_prev = '<-1>'
@@ -510,7 +530,7 @@ def main(_):
                     sym_idx = weighted_pick(scores)
                     if sym_idx <= 1:
                         print('rare')
-                sym_idx = sym_idx - 1 # remove special
+                sym_idx = sym_idx - 1  # remove special
                 sym = idx_to_sym[sym_idx]
 
                 seq_scores.append(scores)
@@ -522,6 +542,7 @@ def main(_):
 
             with open(os.path.join(FLAGS.experiment_dir, 'seq.pkl'), 'wb') as f:
                 pickle.dump((seq_scores, seq_sym_idxs, seq_syms), f, protocol=2)
+
 
 if __name__ == '__main__':
     tf.app.run()

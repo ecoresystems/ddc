@@ -1,8 +1,9 @@
 import math
-import numpy as np
 
-from scipy.signal import fftconvolve
+import numpy as np
 from scipy.io.wavfile import write as wavwrite
+from scipy.signal import fftconvolve
+
 
 def _wav_write(wav_fp, fs, wav_f, normalize=False):
     if normalize:
@@ -12,6 +13,7 @@ def _wav_write(wav_fp, fs, wav_f, normalize=False):
     wav_f = np.clip(wav_f, -1.0, 1.0)
     wav = (wav_f * 32767.0).astype(np.int16)
     wavwrite(wav_fp, fs, wav)
+
 
 # (length, val) pairs
 def _linterp(val_start, pts, env_len):
@@ -25,6 +27,7 @@ def _linterp(val_start, pts, env_len):
         env.append(np.linspace(val_curr, pt_val, pt_len, endpoint=False))
         val_curr = pt_val
     return np.concatenate(env)
+
 
 def write_preview_wav(wav_fp, note_beats_and_abs_times, wav_fs=11025.0):
     wav_len = int(wav_fs * (note_beats_and_abs_times[-1][1] + 0.05))
@@ -60,16 +63,17 @@ def write_preview_wav(wav_fp, note_beats_and_abs_times, wav_fs=11025.0):
         click_f = click_env * np.sin(2.0 * np.pi * freqs[idx] * click_t)
 
         metro_f += fftconvolve(pulse_f[idx], click_f, mode='full')[:wav_len]
-        #metro_f += pulse_f[idx][:wav_len]
+        # metro_f += pulse_f[idx][:wav_len]
 
     _wav_write(wav_fp, wav_fs, metro_f, normalize=True)
+
 
 if __name__ == '__main__':
     import json
     import sys
 
     json_fp, wav_fp = sys.argv[1:3]
-    
+
     with open(json_fp, 'r') as f:
         meta = json.loads(f.read())
 
