@@ -1,6 +1,7 @@
 from functools import reduce
 
 import numpy as np
+import dill
 
 from chart import SymbolicChart, OnsetChart
 
@@ -106,9 +107,8 @@ if __name__ == '__main__':
                 out_name = '{}.pkl'.format(json_name)
                 out_fp = os.path.join(args.out_dir, out_name)
                 dataset_out_names.append(os.path.abspath(out_fp))
-                print(song_data)
                 with open(out_fp, 'wb') as f:
-                    pickle.dump(song_data, f, protocol=2)
+                    dill.dump(song_data, f)
 
         with open(os.path.join(args.out_dir, '{}.txt'.format(dataset_name)), 'w') as f:
             f.write('\n'.join(dataset_out_names))

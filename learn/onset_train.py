@@ -28,10 +28,10 @@ tf.app.flags.DEFINE_integer('audio_nchannels', 3, 'Number of channels per frame'
 tf.app.flags.DEFINE_string('audio_select_channels', '', 'List of CSV audio channels. If non-empty, other channels excluded from model.')
 tf.app.flags.DEFINE_string('feat_diff_feet_to_id_fp', '', '')
 tf.app.flags.DEFINE_string('feat_diff_coarse_to_id_fp', '', '')
-tf.app.flags.DEFINE_bool('feat_diff_dipstick', '', '')
+tf.app.flags.DEFINE_bool('feat_diff_dipstick', False, '')
 tf.app.flags.DEFINE_string('feat_freetext_to_id_fp', '', '')
-tf.app.flags.DEFINE_bool('feat_beat_phase', '', '')
-tf.app.flags.DEFINE_bool('feat_beat_phase_cos', '', '')
+tf.app.flags.DEFINE_bool('feat_beat_phase', False, '')
+tf.app.flags.DEFINE_bool('feat_beat_phase_cos', False, '')
 
 # Network params
 tf.app.flags.DEFINE_string('cnn_filter_shapes', '', 'CSV 3-tuples of filter shapes (time, freq, n)')
