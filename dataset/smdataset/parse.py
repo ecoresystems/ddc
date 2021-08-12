@@ -17,7 +17,6 @@ def kv_parser(k_parser, v_parser):
             return (None, None)
         k, v = x.split('=', 1)
         return k_parser(k), v_parser(v)
-
     return parser
 
 
@@ -143,7 +142,7 @@ ATTR_NAME_TO_PARSER = {
     'stops': stops_parser,
     'samplestart': float_parser,
     'samplelength': float_parser,
-    # 'displaybpm': str_parser,
+    'displaybpm': str_parser,
     'selectable': bool_parser,
     'bgchanges': str_parser,
     'bgchanges2': str_parser,
@@ -170,6 +169,39 @@ def parse_sm_txt(sm_txt):
             continue
 
         attr_val_parsed = ATTR_NAME_TO_PARSER[attr_name](attr_val)
+        if attr_name in attrs:
+            if attr_name not in ATTR_MULTI:
+                if attr_val_parsed == attrs[attr_name]:
+                    continue
+                else:
+                    raise ValueError('Attribute {} defined multiple times'.format(attr_name))
+            attrs[attr_name].append(attr_val_parsed)
+        else:
+            attrs[attr_name] = attr_val_parsed
+
+    for key in list(attrs):
+        if attrs[key] is None or attrs[key] == []:
+            attrs.pop(key)
+    # for attr_name, attr_val in attrs.items():
+    #     if attr_val == None or attr_val == []:
+    #         del attrs[attr_name]
+
+    return attrs
+
+TIME_SIG={
+'timesignatures': list_parser(kv_parser(float_parser, kv_parser(int_parser, int_parser))),
+}
+def extract_time_signature(sm_txt):
+    attrs = {attr_name: [] for attr_name in ATTR_MULTI}
+
+    for attr_name, attr_val in re.findall(r'#([^:]*):([^;]*);', sm_txt):
+        attr_name = attr_name.lower()
+
+        if attr_name not in TIME_SIG:
+            # parlog.warning('Found unexpected attribute {}:{}, ignoring'.format(attr_name, attr_val))
+            continue
+
+        attr_val_parsed = TIME_SIG[attr_name](attr_val)
         if attr_name in attrs:
             if attr_name not in ATTR_MULTI:
                 if attr_val_parsed == attrs[attr_name]:

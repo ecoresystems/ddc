@@ -1,2 +1,2 @@
-SM_DIR=${HOME}/Projects/KLab/ddc
+SM_DIR=${HOME}/PycharmProjects/ddc
 SMDATA_DIR=${SM_DIR}/data

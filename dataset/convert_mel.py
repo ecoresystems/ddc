@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 
 from constants import *
-from dataset.smdataset.parse import parse_sm_txt
+from dataset.smdataset.parse import extract_time_signature
 
 
 def _format(d):
@@ -182,11 +182,24 @@ if __name__ == "__main__":
                     bpms = json_info['bpms']
                     sm_file_path = Path(json_info["sm_fp"])
                     ssc_file_path = os.path.join(sm_file_path.parent, Path(sm_file_path).stem + ".ssc")
-                    print(ssc_file_path)
+                    print("BPM: ", end='')
+                    print(bpms)
+                    bpm_df = pd.DataFrame(bpms, columns=['time', 'bpm'])
                     if Path(ssc_file_path).exists():
                         with open(ssc_file_path, 'r') as ssc_file:
-                            res_dict = parse_sm_txt(ssc_file.read())
-                            print(res_dict.keys())
+                            time_signatures = extract_time_signature(ssc_file.read())['timesignatures']
+                            time_signature_df = pd.DataFrame(time_signatures, columns=['time', 'time_signature'])
+                            time_signature_df[["numerator", "denominator"]] = pd.DataFrame(
+                                time_signature_df['time_signature'].tolist())
+                            time_signature_df["regularized_numerator"] = 4 // time_signature_df["denominator"] * \
+                                                                         time_signature_df["numerator"]
+                            print("Time Signature: ", end='')
+                            print(time_signatures)
+                        bpm_df = pd.merge(bpm_df, time_signature_df, on="time", how="outer").sort_values(
+                            by=['time']).fillna(method='ffill')
+                        bpm_df = bpm_df[["time", "bpm", "regularized_numerator"]].copy()
+                        print(bpm_df.values.tolist())
+
                     # file_path = Path(os.path.join(save_dir, root.split('/')[-2], root.split('/')[-1], Path(file).stem))
                     # future = executor.submit(
                     #     convert,
@@ -196,4 +209,3 @@ if __name__ == "__main__":
                     #     bpm_info=bpms
                     # )
                     # future_list.append(future)
-
