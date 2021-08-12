@@ -143,7 +143,7 @@ ATTR_NAME_TO_PARSER = {
     'stops': stops_parser,
     'samplestart': float_parser,
     'samplelength': float_parser,
-    'displaybpm': str_parser,
+    # 'displaybpm': str_parser,
     'selectable': bool_parser,
     'bgchanges': str_parser,
     'bgchanges2': str_parser,
@@ -153,7 +153,7 @@ ATTR_NAME_TO_PARSER = {
     'musicbytes': int_parser,
     'attacks': str_parser,
     'timesignatures': list_parser(kv_parser(float_parser, kv_parser(int_parser, int_parser))),
-    'warps': unsupported_parser('warps'),
+    'warps': str_parser,
     'notes': notes_parser
 }
 ATTR_MULTI = ['notes']

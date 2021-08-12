@@ -1,6 +1,7 @@
 """メルスペクトラムデータ作成
 """
 import json
+import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import List, Optional
@@ -9,7 +10,8 @@ import librosa
 import numpy as np
 import pandas as pd
 
-from notes_generator.constants import *
+from constants import *
+from dataset.smdataset.parse import parse_sm_txt
 
 
 def _format(d):
@@ -20,12 +22,12 @@ def _format(d):
 
 
 def convert_all(
-    m_live_data: pd.DataFrame,
-    wav_base_path: Path,
-    save_base_path: Path,
-    aug_count: int = 0,
-    log_enable: bool = False,
-    noise_rate: float = 0.005,
+        m_live_data: pd.DataFrame,
+        wav_base_path: Path,
+        save_base_path: Path,
+        aug_count: int = 0,
+        log_enable: bool = False,
+        noise_rate: float = 0.005,
 ):
     path2row = {d["bgm_path"]: d for idx, d in m_live_data.iterrows()}
     for bgm_path, row in path2row.items():
@@ -49,12 +51,12 @@ def convert_all(
 
 
 def convert_all_parallel(
-    m_live_data: pd.DataFrame,
-    wav_base_path: Path,
-    save_base_path: Path,
-    aug_count: int = 0,
-    log_enable: bool = False,
-    noise_rate: float = 0.005,
+        m_live_data: pd.DataFrame,
+        wav_base_path: Path,
+        save_base_path: Path,
+        aug_count: int = 0,
+        log_enable: bool = False,
+        noise_rate: float = 0.005,
 ):
     path2row = {d["bgm_path"]: d for idx, d in m_live_data.iterrows()}
     future_list = []
@@ -86,18 +88,17 @@ def add_white_noise(x, rate=0.005):
 
 
 def convert(
-    bgm_path: str,
-    live_id: int,
-    wav_base_path: Path,
-    save_base_path: Path,
-    aug_count: int = 0,
-    log_enable: bool = True,
-    bpm_info: Optional[List] = None,
-    bpm: Optional[List[int]] = None,
-    noise_rate: float = 0.005,
+        music_file_path: str,
+        live_id: str,
+        save_base_path: Path,
+        aug_count: int = 0,
+        log_enable: bool = True,
+        bpm_info: Optional[List] = None,
+        bpm: Optional[List[int]] = None,
+        noise_rate: float = 0.005,
 ):
-    print(f"bgm_path: {bgm_path} live_id: {live_id}, log_enable: {log_enable}")
-    full_path = wav_base_path / f"{bgm_path}.wav"
+    print(f"bgm_path: {music_file_path} live_id: {live_id}, log_enable: {log_enable}")
+    full_path = Path(music_file_path)
     print(f"full path: {full_path}")
     data, sr = librosa.load(str(full_path), sr=SAMPLE_RATE)
     assert sr == SAMPLE_RATE
@@ -141,12 +142,15 @@ def convert(
         tempo=tempo,
     )
     if bpm_info:
+        for index, bpm_list in enumerate(bpm_info):
+            bpm_info[index].append(tempo[0].item())
+        print(bpm_info)
         # assert shape
         assert (
-            np.array(bpm_info).shape[-1] == 3
+                np.array(bpm_info).shape[-1] == 3
         ), f"The shape of bpm_info is invalid. live_id={live_id}"
         assert (
-            np.array(bpm_info).ndim == 2
+                np.array(bpm_info).ndim == 2
         ), f"The dimension of bpm_info is invalid. live_id={live_id}"
         metadata["bpm_info"] = bpm_info
     if bpm:
@@ -165,8 +169,31 @@ def get_song_length(audio_path: Path) -> int:
     return data.shape[0] * 1000 // sr
 
 
-if __name__=="__main__":
-    for root, subdir, files in os.walk("../data/json_raw"):
-        for file in files:
-            if file.endswith(".json"):
-                print(file)
+if __name__ == "__main__":
+    save_dir = "../data/mel_log"
+    future_list = []
+    with ProcessPoolExecutor() as executor:
+        for root, subdir, files in os.walk("../data/json_raw"):
+            for file in files:
+                if file.endswith(".json"):
+                    with open(os.path.join(root, file)) as json_file:
+                        json_info = json.load(json_file)
+                    music_file_path = json_info['music_fp']
+                    bpms = json_info['bpms']
+                    sm_file_path = Path(json_info["sm_fp"])
+                    ssc_file_path = os.path.join(sm_file_path.parent, Path(sm_file_path).stem + ".ssc")
+                    print(ssc_file_path)
+                    if Path(ssc_file_path).exists():
+                        with open(ssc_file_path, 'r') as ssc_file:
+                            res_dict = parse_sm_txt(ssc_file.read())
+                            print(res_dict.keys())
+                    # file_path = Path(os.path.join(save_dir, root.split('/')[-2], root.split('/')[-1], Path(file).stem))
+                    # future = executor.submit(
+                    #     convert,
+                    #     music_file_path=music_file_path,
+                    #     live_id=json_info['pack'] + '_' + json_info['title'],
+                    #     save_base_path=file_path,
+                    #     bpm_info=bpms
+                    # )
+                    # future_list.append(future)
+
