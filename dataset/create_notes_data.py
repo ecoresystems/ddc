@@ -69,6 +69,8 @@ if __name__ == "__main__":
                                     sub_beats_count += 1 / note_duration
                                 bar_count += 1
                 song_data = pd.DataFrame(note_data)
+                song_data['diff'] = song_data['timing_msec'].diff(periods=1)
+                song_data['diff'].fillna(song_data['timing_msec'], inplace=True)
                 songs_data.append(song_data)
                 song_data.to_csv(f"../data/csvs/{live_id}.csv", header=True, index=False)
     pd.concat(songs_data).reset_index(inplace=False).to_json("../data/notes_ddc.json", orient="records")
