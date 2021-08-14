@@ -142,8 +142,11 @@ def convert(
         tempo=tempo,
     )
     if bpm_info:
-        for index, bpm_list in enumerate(bpm_info):
-            bpm_info[index].append(tempo[0].item())
+        print(bpm_info)
+        print(np.array(bpm_info).shape)
+        if np.array(bpm_info).shape[-1] == 2:
+            for index, bpm_list in enumerate(bpm_info):
+                bpm_info[index].append(4.0)
         print(bpm_info)
         # assert shape
         assert (
@@ -198,14 +201,14 @@ if __name__ == "__main__":
                         bpm_df = pd.merge(bpm_df, time_signature_df, on="time", how="outer").sort_values(
                             by=['time']).fillna(method='ffill')
                         bpm_df = bpm_df[["time", "bpm", "regularized_numerator"]].copy()
-                        print(bpm_df.values.tolist())
-
-                    # file_path = Path(os.path.join(save_dir, root.split('/')[-2], root.split('/')[-1], Path(file).stem))
+                    file_path = Path(os.path.join(save_dir, root.split('/')[-2], root.split('/')[-1], Path(file).stem))
+                    convert(music_file_path=music_file_path, live_id=json_info['pack'] + '_' + json_info['title'],
+                            save_base_path=file_path, bpm_info=bpm_df.values.tolist())
                     # future = executor.submit(
                     #     convert,
                     #     music_file_path=music_file_path,
                     #     live_id=json_info['pack'] + '_' + json_info['title'],
                     #     save_base_path=file_path,
-                    #     bpm_info=bpms
+                    #     bpm_info=bpm_df.values.tolist()
                     # )
                     # future_list.append(future)
