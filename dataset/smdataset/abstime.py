@@ -1,3 +1,5 @@
+import pandas as pd
+
 _EPSILON = 1e-6
 
 
@@ -77,3 +79,54 @@ def calc_note_beats_and_abs_times(offset, bpms, stops, note_data):
     assert sorted(beat_times) == beat_times
 
     return note_beats_abs_times
+
+
+def calc_bpm_info(offset, bpms, stops, time_sigs):
+    segment_lengths = calc_segment_lengths(bpms)
+
+    # copy bpms
+    bpms = bpms[:]
+
+    if time_sigs is not None:
+        bpm_df = pd.DataFrame(bpms, columns=['beat', 'bpm'])
+        time_sig_df = pd.DataFrame(time_sigs, columns=['beat', 'time_signature'])
+        time_sig_df[["numerator", "denominator"]] = pd.DataFrame(
+            time_sig_df['time_signature'].tolist())
+        time_sig_df["regularized_numerator"] = 4 // time_sig_df[
+            "denominator"] * time_sig_df["numerator"]
+        bpm_df = pd.merge(bpm_df, time_sig_df, on="beat", how="outer").sort_values(
+            by=['beat']).fillna(method='ffill')
+        bpm_df = bpm_df[["beat", "bpm", "regularized_numerator"]].copy()
+        bpms, time_sigs = [], []
+        for i, (beat, bpm, sig) in bpm_df.iterrows():
+            bpms.append((beat, bpm))
+            time_sigs.append(sig)
+    else:
+        time_sigs = [4] * len(bpms)
+
+    # beat loop
+    bpm_infos = []
+    beat_times = []
+    for (beat, bpm), sig in zip(bpms, time_sigs):
+        beat_abs = calc_abs_for_beat(offset, bpms, stops, segment_lengths,
+                                     beat)
+        beat_abs_ms = beat_abs * 1000
+        bpm_infos.append((bpm, beat_abs_ms, sig))
+        beat_times.append(beat_abs)
+
+    # handle negative stops
+    beat_time_prev = float('-inf')
+    del_idxs = []
+    for i, beat_time in enumerate(beat_times):
+        if beat_time_prev > beat_time:
+            del_idxs.append(i)
+        else:
+            beat_time_prev = beat_time
+    for del_idx in sorted(del_idxs, reverse=True):
+        del bpm_infos[del_idx]
+        del beat_times[del_idx]
+
+    # TODO: remove when stable
+    assert sorted(beat_times) == beat_times
+
+    return bpm_infos

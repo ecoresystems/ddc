@@ -75,7 +75,7 @@ if __name__ == '__main__':
         print('Only accepting charts with pulses per measure: {}'.format(args.ppms))
 
     if not os.path.isdir(args.json_out_dir):
-        os.mkdir(args.json_out_dir)
+        os.makedirs(args.json_out_dir, exist_ok=True)
 
     pack_names = get_subdirs(args.json_in_dir, args.choose)
 
