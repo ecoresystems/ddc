@@ -110,8 +110,11 @@ def calc_bpm_info(offset, bpms, stops, time_sigs):
     for (beat, bpm), sig in zip(bpms, time_sigs):
         beat_abs = calc_abs_for_beat(offset, bpms, stops, segment_lengths,
                                      beat)
-        beat_abs_ms = beat_abs * 1000
-        bpm_infos.append((bpm, beat_abs_ms, sig))
+        # ensure beat_abs is positive
+        while beat_abs < 0:
+            beat_abs += sig * bpm_to_spb(bpm)
+        beat_abs_ms = round(beat_abs * 1000)
+        bpm_infos.append((bpm, beat_abs_ms, int(sig)))
         beat_times.append(beat_abs)
 
     # handle negative stops
